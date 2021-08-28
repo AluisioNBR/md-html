@@ -1,57 +1,4 @@
-const fs = require('fs'), getFlag = require('./flag') // Importação do FileSystem e do GetFlag
-
-// Declaração do Objeto de conversão
-const Convert = {
-	// Método para conversão de títulos
-	headerLine(line){
-		const conditions = [
-			line[0] == '#' && line[1] == '#' && line[2] == '#' && line[3] == '#' && line[4] == '#' && line[5] == '#',
-			line[0] == '#' && line[1] == '#' && line[2] == '#' && line[3] == '#' && line[4] == '#',
-			line[0] == '#' && line[1] == '#' && line[2] == '#' && line[3] == '#',
-			line[0] == '#' && line[1] == '#' && line[2] == '#',
-			line[0] == '#' && line[1] == '#',
-		]
-
-		if(conditions[0]) newText = newText + `		<h6>${line.slice(7)}</h6>\n`
-		
-		else if(conditions[1]) newText = newText + `		<h5>${line.slice(6)}</h5>\n`
-		
-		else if(conditions[2]) newText = newText + `		<h4>${line.slice(5)}</h4>\n`
-		
-		else if(conditions[3]) newText = newText + `		<h3>${line.slice(4)}</h3>\n`
-		
-		else if(conditions[4]) newText = newText + `		<h2>${line.slice(3)}</h2>\n`
-		
-		else newText = newText + `		<h1>${line.slice(2)}</h1>\n`
-	},
-
-	// Método para conversão de parágrafos
-	paragraphLine(line){
-		newText = newText + `		<p>${line}</p>\n`
-	},
-
-	// Método para conversão de listas não ordenadas
-	newUl(newUl){
-		newText = newText + `		<ul>\n`
-		for(let li of newUl){
-			newText = newText + `			<li>${li}</li>\n`
-		}
-		newText = newText + `		</ul>\n`
-
-		newUl = []
-	},
-
-	// Método para conversão de listas ordenadas
-	newOl(newOl){
-		newText = newText + `		<ol>\n`
-		for(let li of newUl){
-			newText = newText + `			<li>${li}</li>\n`
-		}
-		newText = newText + `		</ol>\n`
-
-		newOl = []
-	}
-}
+const fs = require('fs'), getFlag = require('./flag'), Convert = require('./convert') // Importação do FileSystem, GetFlag e do objeto Convert
 
 // Declaração das variáveis file(Que vai receber o caminho/nome do arquivo) e newText(Que vai armazenar o texto convertido)
 let file, newText = `<!DOCTYPE html>
@@ -90,21 +37,21 @@ fs.readFile(file, { encoding: 'utf-8', flag: 'r' }, function (err, data) {
 			if (line == "") newText = newText + '\n'
 			
 			// Se a linha começar com '#', converta para título
-			else if(line[0] == '#') Convert.headerLine(line)
+			else if(line[0] == '#') newText = Convert.headerLine(line, newText)
 
 			// Se a linha iniciar com '*' ou '-' ou '+' armazaene como parte de uma lista ul lista
 			else if(line[0] == '*' || line[0] == '-' || line[0] == '+') newUl.push(line.slice(2))
 
 			// Se a linha iniciar com um número e um ponto armazaene como parte de uma lista ul lista
-			else if(typeof(line[0]) == Number && line[1] == ".") newOl.push(line.slice(3))
+			//else if(typeof(line[0]) == Number && line[1] == ".") newOl.push(line.slice(3))
 			
 			// Senão, converta como um parágrafo
-			else Convert.paragraphLine(line)
+			else newText = Convert.paragraphLine(line, newText)
 
 			//Conversão de listas ordenadas e não ordenadas
-			if((line[0] != '*' && line[0] != '-' && line[0] != '+') && (beforeLine[0] == '*' || beforeLine[0] == '-' || beforeLine[0] == '+')) Convert.newUl(newUl)
+			if((line[0] != '*' && line[0] != '-' && line[0] != '+') && (beforeLine[0] == '*' || beforeLine[0] == '-' || beforeLine[0] == '+')) newText = Convert.newUl(newUl, newText)
 			
-			else if((line[0] != '*' && line[0] != '-' && line[0] != '+') && (typeof(beforeLine[0]) == number && beforeLine[1] == ".")) Convert.newOl(newOl)
+			//else if((line[0] != '*' && line[0] != '-' && line[0] != '+') && (typeof(beforeLine[0]) == number && beforeLine[1] == ".")) newText = Convert.newOl(newOl, newText)
 
 			beforeLine = line
 			
