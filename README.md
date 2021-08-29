@@ -2,7 +2,7 @@
 
 ## Como vai funcionar ?
 
-No terminal, será ativado o arquivo principal(main.js) e passado a flag ´-p´ com o caminho/nome do arquivo. Após isso, o arquivo principal converterá o arquivo Markdown(.md) para um arquivo HTML(.html)
+No terminal, será ativado o arquivo principal(main.js) com o caminho/nome do arquivo. Após isso, o arquivo principal converterá o arquivo Markdown(.md) para um arquivo HTML(.html)
 
 ## Quais ferramentas vão ser usadas ?
 
