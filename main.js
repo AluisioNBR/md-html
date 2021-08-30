@@ -17,9 +17,14 @@ fs.readFile(file, { encoding: 'utf-8', flag: 'r' }, function (err, data) {
 	if(err) throw console.log(err)
 	else{
 		// Caso não haja erros, será feito uma leitura do arquivo linha por linha
-		let text = data.split('\n'), newUl = [], newOl = [], beforeLine = ""
+		let text = data.split('\n'), newUl = [], newOl = [], newCheckList = [], codeBlockCount = 0, beforeLine = ""
+		
 		for(let line of text){
 			let lineNum = Number(line[0]), beforeLNum = Number(beforeLine[0])
+			const listUlCA = line[0] == '*' || line[0] == '-' || line[0] == '+'
+			const listOlCA = (typeof(lineNum) == "number" && !isNaN(lineNum)) && line[1] == "."
+			const listUlC = (line[0] != '*' && line[0] != '-' && line[0] != '+') && (beforeLine[0] == '*' || beforeLine[0] == '-' || beforeLine[0] == '+')
+			const listOlC = (isNaN(lineNum) && line[1] != ".") && ((typeof(beforeLNum) == "number" && !isNaN(beforeLNum) && beforeLine[1] == "."))
 
 			// Se a linha estiver vazia, quebre a linha e prossiga
 			if (line == "") newText = newText + '\n'
@@ -27,19 +32,49 @@ fs.readFile(file, { encoding: 'utf-8', flag: 'r' }, function (err, data) {
 			// Se a linha começar com '#', converta para título
 			else if(line[0] == '#') newText = Convert.headerLine(line, newText)
 
+			// Se a linha começar com um '>', converta para bloco de citação
+			else if(line[0] == '>') newText = Convert.blockquotes(line, newText)
+
+			// Se a linha começar com '```', inicie um novo bloco de código
+			else if(line[0] == '`' && line[1] == '`' && line[2] == '`'){
+				codeBlockCount++
+				if(codeBlockCount == 1) newText = newText + `		<pre><code>\n`
+				else if(codeBlockCount == 2) newText = newText + `		</code></pre>\n`; codeBlockCount = 0
+			}
+
+			else if(codeBlockCount == 1) newText = newText + `			${line}\n`
+
+			// Se a linha iniciar com '*' ou '-' ou '+' e tiver um "[ ]" ou um "[x]"
+			else if((listUlCA || listOlCA) && (line[2] == '[' && line[4] == ']')){
+				if(line[3] == 'x') newCheckList.push(`<input type="checkbox" checked value="${line.slice(6)}">${line.slice(6)}<br>\n`)
+				
+				else newCheckList.push(`<input type="checkbox" value="${line.slice(6)}">${line.slice(6)}<br>\n`)
+			}
+
 			// Se a linha iniciar com '*' ou '-' ou '+' armazaene como parte de uma lista ul lista
-			else if(line[0] == '*' || line[0] == '-' || line[0] == '+') newUl.push(line.slice(2))
+			else if(listUlCA) newUl.push(line.slice(2))
 
 			// Se a linha iniciar com um número e um ponto armazaene como parte de uma lista ul lista
-			else if((typeof(lineNum) == "number" && !isNaN(lineNum)) && line[1] == ".") newOl.push(line.slice(3))
+			else if(listOlCA) newOl.push(line.slice(3))
 			
-			// Senão, converta como um parágrafo
-			else newText = Convert.paragraphLine(line, newText)
+			// Se o contador de bloco de código for 0, converta como um parágrafo
+			else if(codeBlockCount == 0) newText = Convert.paragraphLine(line, newText)
 
 			//Conversão de listas ordenadas e não ordenadas
-			if((line[0] != '*' && line[0] != '-' && line[0] != '+') && (beforeLine[0] == '*' || beforeLine[0] == '-' || beforeLine[0] == '+')) newText = Convert.newUl(newUl, newText)
+			if((listOlC || listUlC) && (line[2] != '[' && line[4] != ']')){
+				newText = newText + Convert.newCheckList(newCheckList, newText)
+				newCheckList = []
+			}
+
+			else if(listUlC){
+				newText = Convert.newUl(newUl, newText)
+				newUl = []
+			}
 			
-			else if((isNaN(lineNum) && line[1] != ".") && ((typeof(beforeLNum) == "number" && !isNaN(beforeLNum) && beforeLine[1] == "."))) newText = Convert.newOl(newOl, newText)
+			else if(listOlC){
+				newText = Convert.newOl(newOl, newText)
+				newOl = []
+			}
 
 			beforeLine = line
 			

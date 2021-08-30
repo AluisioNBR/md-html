@@ -24,6 +24,15 @@ const Convert = {
         return newText
 	},
 
+	// Método para conversão de blocos de citação
+	blockquotes(line, newText){
+		newText = newText + `		<blockquote>
+			<p>${line.slice(2)}</p>
+		</blockquote>`
+
+		return newText
+	},
+
 	// Método para conversão de parágrafos
 	paragraphLine(line, newText){
 		newText = newText + `		<p>${line}</p>\n`
@@ -39,8 +48,6 @@ const Convert = {
 		}
 		newText = newText + `		</ul>\n`
 
-		newUl = []
-
         return newText
 	},
 
@@ -52,9 +59,17 @@ const Convert = {
 		}
 		newText = newText + `		</ol>\n`
 
-		newOl = []
-
         return newText
+	},
+
+	newCheckList(newCheckList, newText){
+		newText = newText + `		<form>\n`
+		for (let input of newCheckList) {
+			newText = newText + `			${input}`
+		}
+		newText = newText + `		</form>\n`
+
+		return newText
 	}
 }
 
